@@ -1,6 +1,6 @@
 {
   "name": "monitor-fe",
-  "version": "1.0.1",
+  "version": "1.0.4",
   "description": "a fe monitor project",
   "main": "monitor.min.js",
   "scripts": {
