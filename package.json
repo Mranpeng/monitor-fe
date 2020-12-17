@@ -1,0 +1,32 @@
+{
+  "name": "monitor-fe",
+  "version": "1.0.0",
+  "description": "a fe monitor project",
+  "main": "index.js",
+  "scripts": {
+    "build": "webpack"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yuanyuan2134/monitor-fe.git"
+  },
+  "keywords": [
+    "monitor"
+  ],
+  "author": "fangyuan",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/yuanyuan2134/monitor-fe/issues"
+  },
+  "homepage": "https://github.com/yuanyuan2134/monitor-fe#readme",
+  "dependencies": {
+    "axios": "^0.21.0",
+    "babel-core": "^6.22.1",
+    "babel-loader": "^7.1.1",
+    "babel-preset-env": "^1.3.2",
+    "compression-webpack-plugin": "^7.0.0",
+    "vue": "^2.6.12",
+    "webpack": "^5.10.3",
+    "webpack-cli": "^4.2.0"
+  }
+}
