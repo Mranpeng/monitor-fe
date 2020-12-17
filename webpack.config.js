@@ -6,6 +6,7 @@ module.exports = {
     output: {  //输出文件路径设置
         path: __dirname,  
         filename: './monitor.min.js',  
+        libraryTarget:"umd"
     },  
     module: {  
         rules:[
