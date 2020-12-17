@@ -1,1 +1,1 @@
-module.exports = require('./monitor.min.js')
+module.exports = require('./src/monitor.js')
