@@ -247,7 +247,8 @@ class WebMonitor extends Observer {
   __vueError() {
     const _self = this
     const errorType = 'vueError'
-    Vue.config.errorHandler = function (error, vm, info) {
+    vue = Vue.default || Vue
+    vue.config.errorHandler = function (error, vm, info) {
       const componentInfo = vm._isVue ? vm.$options.__file || vm.$options.name || vm.$options._componentTag : vm.name;
       _self.__report(errorType, _self.__createMessage({
         componentInfo: componentInfo || '',
