@@ -4,8 +4,8 @@
  */
 const Vue = require('vue')
 const axios = require('axios')
-var _ = require('lodash');
-var moment = require('moment');
+const _ = require('lodash');
+const moment = require('moment');
 const Observer = require('./observer.js')
 const Utils = require('./utils.js')
 
