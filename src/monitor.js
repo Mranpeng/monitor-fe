@@ -132,7 +132,7 @@ class WebMonitor extends Observer {
     this.cacheQuene.push({
       pageUrl: window.location.href,
       systemName: this.options.systemName,
-      errorType: type + ', ' + moment.format('YYYY-MM-DD HH:mm:ss'),
+      errorType: type + ', ' + this.utils.formatDate(new Date(), 'yyyy-MM-dd hh:mm:ss'),
       userAgent: this.userAgent,
       userId: this.options.userId,
       shopId: this.options.shopId,
