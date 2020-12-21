@@ -4,6 +4,8 @@
  */
 const Vue = require('vue')
 const axios = require('axios')
+var _ = require('lodash');
+var moment = require('moment');
 const Observer = require('./observer.js')
 const Utils = require('./utils.js')
 
@@ -56,7 +58,7 @@ class WebMonitor extends Observer {
    * @memberof WebMonitor
    */
   setOption(options) {
-    if (!this.utils.isObject(options)) {
+    if (!_.isPlainObject(options)) {
       console.warn('前端监控器初始化参数格式错误,请检查!')
       return
     }
@@ -130,7 +132,7 @@ class WebMonitor extends Observer {
     this.cacheQuene.push({
       pageUrl: window.location.href,
       systemName: this.options.systemName,
-      errorType: type + ', ' + this.utils.formatDate(new Date(), 'yyyy-mm-dd hh:MM:ss'),
+      errorType: type + ', ' + moment.format('YYYY-MM-DD HH:mm:ss'),
       userAgent: this.userAgent,
       userId: this.options.userId,
       shopId: this.options.shopId,
@@ -210,7 +212,7 @@ class WebMonitor extends Observer {
     //收集消息
     if (this.utils.isErrorObj(error)) {
       errorMessage = error.stack ? error.stack.toString() : error.message ? error.message : (error || '未知错误')
-    } else if (this.utils.isString(error)) {
+    } else if (_.isString(error)) {
       errorMessage = error
     } else if (this.utils.isAxiosResponseObj(error)) {
       errorMessage = `code:${error.data.code || '--'},msg:${error.data.msg},status:${error.data.status}`
@@ -313,23 +315,23 @@ class WebMonitor extends Observer {
 
     if (error.config.method.toLowerCase() === 'post' && error.config.data) {
       let rusult = {}
-      if (this.utils.isString(error.config.data)) {
+      if (_.isString(error.config.data)) {
         let decodeString = decodeURI(error.config.data)
         if(decodeString.includes('json=')) {
           rusult = JSON.parse(decodeString.split('json=')[1])
         }else {
           rusult = JSON.parse(decodeString)
         }
-      }else if(this.utils.isObject(error.config.data)) {
+      }else if(_.isPlainObject(error.config.data)) {
         rusult = error.config.data
       }
       requestInfo['data'] = rusult
     }
 
     if (error.config.method.toLowerCase() === 'get' && error.config.params) {
-      if (this.utils.isString(error.config.params)) {
+      if (_.isString(error.config.params)) {
         requestInfo['params'] = JSON.parse(error.config.params)
-      }else if(this.utils.isObject(error.config.data)){
+      }else if(_.isPlainObject(error.config.data)){
         requestInfo['params'] = error.config.params
       }
     }

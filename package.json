@@ -1,6 +1,6 @@
 {
   "name": "monitor-fe",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "a fe monitor project",
   "main": "index.js",
   "scripts": {
@@ -22,5 +22,9 @@
   "dependencies": {
     "axios": "^0.21.0",
     "vue": "^2.6.12"
+  },
+  "devDependencies": {
+    "lodash": "^4.17.20",
+    "moment": "^2.29.1"
   }
 }
