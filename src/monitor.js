@@ -5,7 +5,6 @@
 const Vue = require('vue')
 const axios = require('axios')
 const _ = require('lodash');
-const moment = require('moment');
 const Observer = require('./observer.js')
 const Utils = require('./utils.js')
 
