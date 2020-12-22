@@ -4,7 +4,6 @@
  */
 const Vue = (typeof process === 'undefined' || !process) ? null : require('vue')
 const axios = (typeof process === 'undefined' || !process) ? null : require('axios')
-const Observer = require('./observer.js')
 const Utils = require('./utils.js')
 
 
@@ -13,7 +12,7 @@ const Utils = require('./utils.js')
  *
  * @class WebMonitor
  */
-class WebMonitor extends Observer {
+class WebMonitor {
 
 
   /**
@@ -24,7 +23,6 @@ class WebMonitor extends Observer {
    * @memberof WebMonitor
    */
   constructor(params) {
-    super()
     this.utils = new Utils()
     this.baseOptions = { //基础参数
       systemName: '',
@@ -75,7 +73,6 @@ class WebMonitor extends Observer {
     this.__vueError()
     this.__consoleError()
     this.__promiseError()
-    this.__registerCustomError()
   }
 
 
@@ -127,8 +124,9 @@ class WebMonitor extends Observer {
       }
     }
 
+
     this.cacheQuene.push({
-      pageUrl: window.location.href,
+      pageUrl: this.options.pageUrl || (typeof window !== 'undefined' ? window.location.href : ''),
       systemName: this.options.systemName,
       errorType: type + ', ' + this.utils.formatDate(new Date(), 'yyyy-MM-dd hh:mm:ss'),
       userAgent: this.userAgent,
@@ -160,41 +158,28 @@ class WebMonitor extends Observer {
 
 
   /**
-   *注册自定义错误事件(type: 自定义错误事件类型, error: 错误对象/错误字符串)
-   *使用示例： 
-      window.webMonitor.emit({
-        type:'myError', 
-        error: new Error('我错了')
-      })
- 
-      window.webMonitor.emit({
-        type:'myError', 
-        error: '我错了'
-      })
+   *发送自定义错误事件(type: 自定义错误事件类型, error: 错误对象/错误字符串)
    *
    * @memberof WebMonitor
    */
-  __registerCustomError() {
-    const _self = this
-    this.on(function (errorType, error) {
-      if (!errorType) {
-        console.warn('未定义错误类型')
-        return
-      }
+  emit({type, error}) {
+    if (!type) {
+      console.warn('未定义错误类型')
+      return
+    }
 
-      //如果是请求错误，带上请求参数
-      if (errorType === 'httpError') {
-        const requestInfo = _self.__httpError(error)
-        _self.__report(errorType, _self.__createMessage({
-          error
-        }), requestInfo)
-      } else {
-        //其他自定义错误事件，直接上报
-        _self.__report(errorType, _self.__createMessage({
-          error
-        }))
-      }
-    })
+    //如果是请求错误，带上请求参数
+    if (type === 'httpError') {
+      const requestInfo = this.__httpError(error)
+      this.__report(type, this.__createMessage({
+        error
+      }), requestInfo)
+    } else {
+      //其他自定义错误事件，直接上报
+      this.__report(type, this.__createMessage({
+        error
+      }))
+    }
   }
 
 
@@ -272,6 +257,9 @@ class WebMonitor extends Observer {
    */
   __consoleError() {
     const errorType = 'consoleError'
+    if(typeof window === 'undefined') {
+      return
+    }
     if (!window.console || !window.console.error) {
       return
     };
@@ -295,6 +283,9 @@ class WebMonitor extends Observer {
   __promiseError() {
     const errorType = 'promiseError'
     const _self = this
+    if(typeof window === 'undefined') {
+      return
+    }
     window.addEventListener('unhandledrejection', function (error) {
       _self.__report(errorType, _self.__createMessage({
         error: error.reason
@@ -369,7 +360,6 @@ class WebMonitor extends Observer {
     }
 
     if(typeof window === 'undefined') {
-      console.warn('不在浏览器环境!')
       return
     }
 
