@@ -2,8 +2,8 @@
 /**
  * 前端监控错误上报工具
  */
-const Vue = require('vue')
-const axios = require('axios')
+const Vue = process ? require('vue') : null
+const axios = process ? require('axios'): null
 const _ = require('lodash');
 const Observer = require('./observer.js')
 const Utils = require('./utils.js')
@@ -152,7 +152,11 @@ class WebMonitor extends Observer {
       this.options.ajax(data)
       return
     }
-    axios.post(this.options.reportUrl, data)
+    if(axios) {
+      axios.post(this.options.reportUrl, data)
+    }else {
+      console.warn('axios不存在')
+    }
   }
 
 
@@ -247,6 +251,10 @@ class WebMonitor extends Observer {
   __vueError() {
     const _self = this
     const errorType = 'vueError'
+    if(!Vue) {
+      console.warn('Vue不存在!')
+      return
+    }
     let vue = Vue.default || Vue
     vue.config.errorHandler = function (error, vm, info) {
       const componentInfo = vm._isVue ? vm.$options.__file || vm.$options.name || vm.$options._componentTag : vm.name;
@@ -360,6 +368,12 @@ class WebMonitor extends Observer {
       name: 'unknown',
       version: 0
     }
+
+    if(typeof window === 'undefined') {
+      console.warn('不在浏览器环境!')
+      return
+    }
+
     const userAgent = window.navigator.userAgent.toLowerCase();
     if (/(msie|firefox|opera|chrome|netscape)\D+(\d[\d.]*)/.test(userAgent)) {
       browser[RegExp.$1] = true;
@@ -374,7 +388,6 @@ class WebMonitor extends Observer {
   }
 
 }
-
 
 module.exports = WebMonitor;
 
