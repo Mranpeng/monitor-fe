@@ -2,8 +2,8 @@
 /**
  * 前端监控错误上报工具
  */
-const Vue = process ? require('vue') : null
-const axios = process ? require('axios'): null
+const Vue = (typeof process === 'undefined' || !process) ? null : require('vue')
+const axios = (typeof process === 'undefined' || !process) ? null : require('axios')
 const _ = require('lodash');
 const Observer = require('./observer.js')
 const Utils = require('./utils.js')
