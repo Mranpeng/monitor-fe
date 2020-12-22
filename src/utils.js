@@ -18,6 +18,16 @@ class Utils {
     return Object.prototype.toString.call(data) === '[object Error]'
   }
 
+  /**
+   * 是否是字符串
+   *
+   * @return {*} 
+   * @memberof WebMonitor
+   */
+  isString(data) {
+    return typeof data === 'string'
+  }
+
 
 
   /**
@@ -28,6 +38,15 @@ class Utils {
    */
   isAxiosResponseObj(data) {
     return !!((Object.prototype.toString.call(data) === '[object Object]') && data.request && data.headers && data.config)
+  }
+
+  /**
+   * 是否是对象
+   *
+   * @memberof WebMonitor
+   */
+  isObject(data) {
+    return Object.prototype.toString.call(data) === '[object Object]'
   }
 
 

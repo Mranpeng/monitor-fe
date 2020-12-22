@@ -1,6 +1,6 @@
 {
   "name": "monitor-fe",
-  "version": "1.0.17",
+  "version": "1.0.18",
   "description": "a fe monitor project",
   "main": "index.js",
   "scripts": {
@@ -24,6 +24,5 @@
     "vue": "^2.6.12"
   },
   "devDependencies": {
-    "lodash": "^4.17.20"
   }
 }
