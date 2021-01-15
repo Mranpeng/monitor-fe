@@ -1,2 +1,2 @@
 
-module.exports = require('./src/monitor.js')
+module.exports = require('./monitor-fe.js')

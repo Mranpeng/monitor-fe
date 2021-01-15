@@ -1,28 +1,51 @@
 {
   "name": "monitor-fe",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "a fe monitor project",
   "main": "index.js",
   "scripts": {
-    "build": "webpack"
+    "build": "node build"
   },
+  "dependencies": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/yuanyuan2134/monitor-fe.git"
   },
   "keywords": [
-    "monitor"
+    "monitor",
+    "fe-monitor",
+    "monitor-fe",
+    "web-monitor"
   ],
-  "author": "fangyuan",
-  "license": "MIT",
+  "author": "fangyuan <735512174@qq.com>",
   "bugs": {
     "url": "https://github.com/yuanyuan2134/monitor-fe/issues"
   },
-  "homepage": "https://github.com/yuanyuan2134/monitor-fe#readme",
-  "dependencies": {
-    "axios": "^0.21.0",
-    "vue": "^2.6.12"
-  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not ie <= 8"
+  ],
+  "license": "MIT",
   "devDependencies": {
+    "@babel/preset-env": "^7.12.11",
+    "assign-deep": "^0.4.7",
+    "axios": "^0.21.0",
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.0",
+    "babel-plugin-external-helpers": "^6.22.0",
+    "babel-polyfill": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
+    "babel-preset-stage-0": "^6.24.1",
+    "babel-register": "^6.26.0",
+    "chai": "^4.1.2",
+    "puppeteer": "^0.13.0",
+    "rollup": "^0.51.1",
+    "rollup-plugin-babel": "^2.6.1",
+    "rollup-plugin-commonjs": "^8.4.1",
+    "rollup-plugin-node-resolve": "^3.2.0",
+    "rollup-plugin-replace": "^2.0.0",
+    "rollup-plugin-uglify": "^1.0.1",
+    "vue": "^2.6.12"
   }
 }
