@@ -122,8 +122,15 @@ class WebMonitor {
    */
   __report(type, msg, requestInfo) {
     for (let i = 0; i<this.options.whiteList.length; i++) {
-      if (msg.includes(this.options.whiteList[i])) {
-        return
+      const one = this.options.whiteList[i]
+      if(this.utils.isRegExp(one)) {  //如果白名单项是正则对象则匹配屏蔽
+        if (one.test(msg)) {
+          return
+        }
+      }else if(this.utils.isString(one)){ //如果白名单是字符串则包含屏蔽
+        if (msg.includes(one)) {
+          return
+        }
       }
     }
 

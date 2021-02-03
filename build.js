@@ -59,8 +59,8 @@ build({
   plugins: [
     resolve(),
     commonjs(),
-    babel({ runtimeHelpers: true }),
-    uglify()
+    babel({ runtimeHelpers: true })
+    // uglify()
   ]
 }, {
   format: 'umd',
@@ -72,8 +72,8 @@ build({
   plugins: [
     resolve(),
     commonjs(),
-    babel({ runtimeHelpers: true }),
-    uglify()
+    babel({ runtimeHelpers: true })
+    // uglify()
   ]
 }, {
   format: 'umd',

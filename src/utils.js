@@ -49,6 +49,15 @@ class Utils {
     return Object.prototype.toString.call(data) === '[object Object]'
   }
 
+  /**
+   * 是否是正则对象
+   *
+   * @memberof WebMonitor
+   */
+  isRegExp(data) {
+    return Object.prototype.toString.call(data) === '[object RegExp]'
+  }
+
 
   /**
    * 格式化日期和时间
