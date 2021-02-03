@@ -1,5 +1,5 @@
 /*!
- * monitor-fe.js v1.2.1
+ * monitor-fe.js v1.2.2
  * (c) 2021 fangyuan <735512174@qq.com>
  * Released under the MIT License.
  */
@@ -361,9 +361,11 @@ var WebMonitor = function () {
         return;
       }
       window.addEventListener('unhandledrejection', function (error) {
-        _self.__report(errorType, _self.__createMessage({
-          error: error.reason
-        }));
+        if (error.reason) {
+          _self.__report(errorType, _self.__createMessage({
+            error: error.reason
+          }));
+        }
       });
     }
 
