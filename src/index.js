@@ -297,9 +297,11 @@ class WebMonitor {
       return
     }
     window.addEventListener('unhandledrejection', function (error) {
-      _self.__report(errorType, _self.__createMessage({
-        error: error.reason
-      }))
+      if(error.reason) {
+        _self.__report(errorType, _self.__createMessage({
+          error: error.reason
+        }))
+      }
     })
   }
 
