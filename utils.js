@@ -1,5 +1,5 @@
 /*!
- * monitor-fe.js v1.2.2
+ * monitor-fe.js v1.2.4
  * (c) 2021 fangyuan <735512174@qq.com>
  * Released under the MIT License.
  */

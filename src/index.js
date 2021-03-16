@@ -1,10 +1,9 @@
 
+
 /**
  * 前端监控错误上报工具
  */
-const Vue = (typeof process === 'undefined' || !process) ? null : require('vue')
-const axios = (typeof process === 'undefined' || !process) ? null : require('axios')
-const Utils = require('./utils.js')
+ const Utils = require('./utils.js')
 
 
 /**
@@ -30,7 +29,9 @@ class WebMonitor {
       delayTime: 10000,
       whiteList: [],
       userId: '',
-      shopId: ''
+      shopId: '',
+      vue: false,
+      axios: false
     }
     this.options = {}
     this.setOption(params)
@@ -59,6 +60,12 @@ class WebMonitor {
       return
     }
     this.options = Object.assign({}, this.baseOptions, this.options, options)
+    if(this.options.vue) {
+      this.Vue = require('vue')
+    }
+    if(this.options.axios) {
+      this.axios = require('axios')
+    }
   }
 
 
@@ -134,17 +141,26 @@ class WebMonitor {
       }
     }
 
+    //如果有自定义参数，则加上自定义参数
+    let options = {}
+    for (let key in this.options) {
+      if (!Object.keys(this.baseOptions).includes(key)) {
+        options[key] = this.options[key]
+      }
+    }
 
     this.cacheQuene.push({
       pageUrl: this.options.pageUrl || (typeof window !== 'undefined' ? window.location.href : ''),
       systemName: this.options.systemName,
-      errorType: type + ', ' + this.utils.formatDate(new Date(), 'yyyy-MM-dd hh:mm:ss'),
+      errorType: type ,
+      errorTime: this.utils.formatDate(new Date(), 'yyyy-MM-dd hh:mm:ss'),
       userAgent: this.userAgent,
       userId: this.options.userId,
       shopId: this.options.shopId,
       requestInfo: requestInfo || {},
-      errorMessage: msg
-    })
+      errorMessage: msg,
+      customInfo: options
+    })                                                                                                                                                                                                   
   }
 
 
@@ -159,8 +175,8 @@ class WebMonitor {
       this.options.ajax(data)
       return
     }
-    if(axios) {
-      axios.post(this.options.reportUrl, data)
+    if(this.axios) {
+      this.axios.post(this.options.reportUrl, data)
     }else {
       console.warn('axios不存在')
     }
@@ -220,17 +236,6 @@ class WebMonitor {
       errorMessage = `[componentInfo]: ${componentInfo}, ${errorMessage}`
     }
 
-    //如果有自定义参数，则加上自定义参数
-    let options = {}
-    for (let key in this.options) {
-      if (!Object.keys(this.baseOptions).includes(key)) {
-        options[key] = this.options[key]
-      }
-    }
-    if(Object.keys(options).length > 0) {
-      errorMessage += ', '+ JSON.stringify(options)
-    }
-
     //此行不可删除，截获信息以后在浏览器里显示
     console.log(`!!!monitorError: ${errorMessage}`)
     return errorMessage
@@ -245,11 +250,11 @@ class WebMonitor {
   __vueError() {
     const _self = this
     const errorType = 'vueError'
-    if(!Vue) {
+    if(!this.Vue) {
       console.warn('Vue不存在!')
       return
     }
-    let vue = Vue.default || Vue
+    let vue = this.Vue.default || this.Vue
     vue.config.errorHandler = function (error, vm, info) {
       const componentInfo = vm._isVue ? vm.$options.__file || vm.$options.name || vm.$options._componentTag : vm.name;
       _self.__report(errorType, _self.__createMessage({

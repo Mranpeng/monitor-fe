@@ -1,5 +1,5 @@
 /*!
- * monitor-fe.js v1.2.2
+ * monitor-fe.js v1.2.4
  * (c) 2021 fangyuan <735512174@qq.com>
  * Released under the MIT License.
  */
@@ -36,8 +36,6 @@ var createClass = function () {
 /**
  * 前端监控错误上报工具
  */
-var Vue = typeof process === 'undefined' || !process ? null : require('vue');
-var axios = typeof process === 'undefined' || !process ? null : require('axios');
 var Utils = require('./utils.js');
 
 /**
@@ -65,7 +63,9 @@ var WebMonitor = function () {
       delayTime: 10000,
       whiteList: [],
       userId: '',
-      shopId: ''
+      shopId: '',
+      vue: false,
+      axios: false
     };
     this.options = {};
     this.setOption(params);
@@ -97,6 +97,12 @@ var WebMonitor = function () {
         return;
       }
       this.options = Object.assign({}, this.baseOptions, this.options, options);
+      if (this.options.vue) {
+        this.Vue = require('vue');
+      }
+      if (this.options.axios) {
+        this.axios = require('axios');
+      }
     }
 
     /**
@@ -182,15 +188,25 @@ var WebMonitor = function () {
         }
       }
 
+      //如果有自定义参数，则加上自定义参数
+      var options = {};
+      for (var key in this.options) {
+        if (!Object.keys(this.baseOptions).includes(key)) {
+          options[key] = this.options[key];
+        }
+      }
+
       this.cacheQuene.push({
         pageUrl: this.options.pageUrl || (typeof window !== 'undefined' ? window.location.href : ''),
         systemName: this.options.systemName,
-        errorType: type + ', ' + this.utils.formatDate(new Date(), 'yyyy-MM-dd hh:mm:ss'),
+        errorType: type,
+        errorTime: this.utils.formatDate(new Date(), 'yyyy-MM-dd hh:mm:ss'),
         userAgent: this.userAgent,
         userId: this.options.userId,
         shopId: this.options.shopId,
         requestInfo: requestInfo || {},
-        errorMessage: msg
+        errorMessage: msg,
+        customInfo: options
       });
     }
 
@@ -208,8 +224,8 @@ var WebMonitor = function () {
         this.options.ajax(data);
         return;
       }
-      if (axios) {
-        axios.post(this.options.reportUrl, data);
+      if (this.axios) {
+        this.axios.post(this.options.reportUrl, data);
       } else {
         console.warn('axios不存在');
       }
@@ -278,17 +294,6 @@ var WebMonitor = function () {
         errorMessage = '[componentInfo]: ' + componentInfo + ', ' + errorMessage;
       }
 
-      //如果有自定义参数，则加上自定义参数
-      var options = {};
-      for (var key in this.options) {
-        if (!Object.keys(this.baseOptions).includes(key)) {
-          options[key] = this.options[key];
-        }
-      }
-      if (Object.keys(options).length > 0) {
-        errorMessage += ', ' + JSON.stringify(options);
-      }
-
       //此行不可删除，截获信息以后在浏览器里显示
       console.log('!!!monitorError: ' + errorMessage);
       return errorMessage;
@@ -305,11 +310,11 @@ var WebMonitor = function () {
     value: function __vueError() {
       var _self = this;
       var errorType = 'vueError';
-      if (!Vue) {
+      if (!this.Vue) {
         console.warn('Vue不存在!');
         return;
       }
-      var vue = Vue.default || Vue;
+      var vue = this.Vue.default || this.Vue;
       vue.config.errorHandler = function (error, vm, info) {
         var componentInfo = vm._isVue ? vm.$options.__file || vm.$options.name || vm.$options._componentTag : vm.name;
         _self.__report(errorType, _self.__createMessage({
