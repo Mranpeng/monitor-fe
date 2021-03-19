@@ -106,6 +106,20 @@ var WebMonitor = function () {
     }
 
     /**
+     *设置白名单
+     *
+     * @memberof WebMonitor
+     */
+
+  }, {
+    key: 'setWhiteList',
+    value: function setWhiteList(whiteList) {
+      if (whiteList && Array.isArray(whiteList)) {
+        this.options.whiteList = whiteList;
+      }
+    }
+
+    /**
      *初始化
      *
      * @memberof WebMonitor

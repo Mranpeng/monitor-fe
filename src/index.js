@@ -68,6 +68,17 @@ class WebMonitor {
     }
   }
 
+  /**
+   *设置白名单
+   *
+   * @memberof WebMonitor
+   */
+  setWhiteList(whiteList) {
+    if(whiteList && Array.isArray(whiteList)) {
+      this.options.whiteList = whiteList
+    }
+  }
+
 
   /**
    *初始化
