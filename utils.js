@@ -1,5 +1,5 @@
 /*!
- * monitor-fe.js v1.2.4
+ * monitor-fe.js v1.3.0
  * (c) 2021 fangyuan <735512174@qq.com>
  * Released under the MIT License.
  */
@@ -105,6 +105,19 @@ var Utils = function () {
     key: 'isRegExp',
     value: function isRegExp(data) {
       return Object.prototype.toString.call(data) === '[object RegExp]';
+    }
+
+    /**
+    * 是否是函数
+    *
+    * @return {*} 
+    * @memberof WebMonitor
+    */
+
+  }, {
+    key: 'isFunction',
+    value: function isFunction(data) {
+      return Object.prototype.toString.call(data) === '[object Function]';
     }
 
     /**

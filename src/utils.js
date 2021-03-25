@@ -58,6 +58,16 @@ class Utils {
     return Object.prototype.toString.call(data) === '[object RegExp]'
   }
 
+   /**
+   * 是否是函数
+   *
+   * @return {*} 
+   * @memberof WebMonitor
+   */
+  isFunction(data) {
+    return Object.prototype.toString.call(data) === '[object Function]'
+  }
+
 
   /**
    * 格式化日期和时间

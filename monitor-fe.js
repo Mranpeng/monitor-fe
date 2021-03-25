@@ -1,5 +1,5 @@
 /*!
- * monitor-fe.js v1.2.4
+ * monitor-fe.js v1.3.0
  * (c) 2021 fangyuan <735512174@qq.com>
  * Released under the MIT License.
  */
@@ -48,9 +48,7 @@ var WebMonitor = function () {
 
   /**
    * Creates an instance of WebMonitor.
-   * @param {*} systemName  系统名称
-   * @param {*} baseUrl     接口根路径
-   * @param {*} delayTime   检测发送间隔
+   * @param {*} params
    * @memberof WebMonitor
    */
   function WebMonitor(params) {
@@ -69,6 +67,7 @@ var WebMonitor = function () {
     };
     this.options = {};
     this.setOption(params);
+    this.__setWhiteList();
     if (!this.options.systemName) {
       console.warn('前端监控器缺少systemName参数，无法运行，请检查！');
       return;
@@ -106,20 +105,6 @@ var WebMonitor = function () {
     }
 
     /**
-     *设置白名单
-     *
-     * @memberof WebMonitor
-     */
-
-  }, {
-    key: 'setWhiteList',
-    value: function setWhiteList(whiteList) {
-      if (whiteList && Array.isArray(whiteList)) {
-        this.options.whiteList = whiteList;
-      }
-    }
-
-    /**
      *初始化
      *
      * @memberof WebMonitor
@@ -133,6 +118,27 @@ var WebMonitor = function () {
       this.__vueError();
       this.__consoleError();
       this.__promiseError();
+    }
+
+    /**
+    *设置白名单
+    *
+    * @memberof WebMonitor
+    */
+
+  }, {
+    key: '__setWhiteList',
+    value: function __setWhiteList() {
+      var _self = this;
+      var script = document.createElement('script');
+      script.setAttribute("type", "text/javascript");
+      script.src = 'https://omo.aiyouyi.cn/common-static/monitor-white-list.js?v=' + new Date().getTime();
+      document.body.appendChild(script);
+      script.onload = function () {
+        if (window.monitorWhiteList && Array.isArray(window.monitorWhiteList)) {
+          _self.options.whiteList = window.monitorWhiteList;
+        }
+      };
     }
 
     /**
@@ -177,10 +183,11 @@ var WebMonitor = function () {
     }
 
     /**
-     *上报错误信息
      *
-     * @param {*} type 上报错误类型
-     * @param {*} msg 消息文本
+     *
+     * @param {*} type  上报错误类型
+     * @param {*} msg  消息文本
+     * @param {*} requestInfo  请求信息
      * @memberof WebMonitor
      */
 
@@ -234,7 +241,7 @@ var WebMonitor = function () {
   }, {
     key: '__send',
     value: function __send(data) {
-      if (this.options.ajax) {
+      if (this.options.ajax && this.utils.isFunction(this.options.ajax)) {
         this.options.ajax(data);
         return;
       }
@@ -246,8 +253,9 @@ var WebMonitor = function () {
     }
 
     /**
-     *发送自定义错误事件(type: 自定义错误事件类型, error: 错误对象/错误字符串)
+     *对外提供的错误发送方法
      *
+     * @param {*} {type, error}  type:错误类型   error:错误内容
      * @memberof WebMonitor
      */
 
@@ -389,8 +397,10 @@ var WebMonitor = function () {
     }
 
     /**
-     *处理http错误事件
      *
+     *
+     * @param {*} error  错误信息
+     * @return {*} 
      * @memberof WebMonitor
      */
 
@@ -443,7 +453,7 @@ var WebMonitor = function () {
   }, {
     key: '__getBrowserInfo',
     value: function __getBrowserInfo() {
-      if (this.options.getUserAgent) {
+      if (this.options.getUserAgent && this.utils.isFunction(this.options.getUserAgent)) {
         this.userAgent = this.options.getUserAgent();
         return;
       }

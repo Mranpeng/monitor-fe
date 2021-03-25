@@ -14,11 +14,10 @@
 class WebMonitor {
 
 
+  
   /**
    * Creates an instance of WebMonitor.
-   * @param {*} systemName  系统名称
-   * @param {*} baseUrl     接口根路径
-   * @param {*} delayTime   检测发送间隔
+   * @param {*} params
    * @memberof WebMonitor
    */
   constructor(params) {
@@ -35,6 +34,7 @@ class WebMonitor {
     }
     this.options = {}
     this.setOption(params)
+    this.__setWhiteList()
     if (!this.options.systemName) {
       console.warn('前端监控器缺少systemName参数，无法运行，请检查！')
       return
@@ -69,18 +69,6 @@ class WebMonitor {
   }
 
   /**
-   *设置白名单
-   *
-   * @memberof WebMonitor
-   */
-  setWhiteList(whiteList) {
-    if(whiteList && Array.isArray(whiteList)) {
-      this.options.whiteList = whiteList
-    }
-  }
-
-
-  /**
    *初始化
    *
    * @memberof WebMonitor
@@ -91,6 +79,24 @@ class WebMonitor {
     this.__vueError()
     this.__consoleError()
     this.__promiseError()
+  }
+
+    /**
+   *设置白名单
+   *
+   * @memberof WebMonitor
+   */
+  __setWhiteList() {
+    const _self = this
+    let script = document.createElement('script');
+    script.setAttribute("type", "text/javascript");
+    script.src = 'https://omo.aiyouyi.cn/common-static/monitor-white-list.js?v=' + new Date().getTime();
+    document.body.appendChild(script);
+    script.onload = function() {
+      if(window.monitorWhiteList && Array.isArray(window.monitorWhiteList)) {
+        _self.options.whiteList = window.monitorWhiteList
+      }
+    }
   }
 
 
@@ -132,10 +138,11 @@ class WebMonitor {
 
 
   /**
-   *上报错误信息
    *
-   * @param {*} type 上报错误类型
-   * @param {*} msg 消息文本
+   *
+   * @param {*} type  上报错误类型
+   * @param {*} msg  消息文本
+   * @param {*} requestInfo  请求信息
    * @memberof WebMonitor
    */
   __report(type, msg, requestInfo) {
@@ -182,7 +189,7 @@ class WebMonitor {
    * @memberof WebMonitor
    */
   __send(data) {
-    if (this.options.ajax) {
+    if (this.options.ajax && this.utils.isFunction(this.options.ajax)) {
       this.options.ajax(data)
       return
     }
@@ -195,8 +202,9 @@ class WebMonitor {
 
 
   /**
-   *发送自定义错误事件(type: 自定义错误事件类型, error: 错误对象/错误字符串)
+   *对外提供的错误发送方法
    *
+   * @param {*} {type, error}  type:错误类型   error:错误内容
    * @memberof WebMonitor
    */
   emit({type, error}) {
@@ -228,6 +236,7 @@ class WebMonitor {
    * @return {*}  生成的消息体
    * @memberof WebMonitor
    */
+  
   __createMessage({ componentInfo, error }) {
 
     //消息内容
@@ -323,8 +332,10 @@ class WebMonitor {
 
 
   /**
-   *处理http错误事件
    *
+   *
+   * @param {*} error  错误信息
+   * @return {*} 
    * @memberof WebMonitor
    */
   __httpError(error) {
@@ -372,7 +383,7 @@ class WebMonitor {
    * @memberof WebMonitor
    */
   __getBrowserInfo() {
-    if (this.options.getUserAgent) {
+    if (this.options.getUserAgent && this.utils.isFunction(this.options.getUserAgent)) {
       this.userAgent = this.options.getUserAgent()
       return
     }
