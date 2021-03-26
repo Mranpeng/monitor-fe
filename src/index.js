@@ -30,11 +30,11 @@ class WebMonitor {
       userId: '',
       shopId: '',
       vue: false,
-      axios: false
+      mini: false, //默认是在小程序环境里，为了兼容小程序老代码
+      wx: null  //微信对象
     }
     this.options = {}
     this.setOption(params)
-    this.__setWhiteList()
     if (!this.options.systemName) {
       console.warn('前端监控器缺少systemName参数，无法运行，请检查！')
       return
@@ -43,8 +43,10 @@ class WebMonitor {
       console.warn('前端监控器缺少reportUrl参数，无法运行，请检查！')
       return
     }
+
     this.cacheQuene = [] //缓冲队列
     this.__init()
+
   }
 
 
@@ -63,9 +65,6 @@ class WebMonitor {
     if(this.options.vue) {
       this.Vue = require('vue')
     }
-    if(this.options.axios) {
-      this.axios = require('axios')
-    }
   }
 
   /**
@@ -74,11 +73,18 @@ class WebMonitor {
    * @memberof WebMonitor
    */
   __init() {
-    this.__getBrowserInfo()  //浏览器信息
-    this.__initQuene()
-    this.__vueError()
-    this.__consoleError()
-    this.__promiseError()
+    this. __getWhiteList((data) => {
+      if(!data) {
+        console.warn('获取白名单失败！')
+        return
+      }else {
+        this.__getBrowserInfo()  //浏览器信息
+        this.__initQuene()
+        this.__vueError()
+        this.__consoleError()
+        this.__promiseError()
+      }
+    })
   }
 
     /**
@@ -86,16 +92,65 @@ class WebMonitor {
    *
    * @memberof WebMonitor
    */
-  __setWhiteList() {
+   __getWhiteList(callback) {
     const _self = this
-    let script = document.createElement('script');
-    script.setAttribute("type", "text/javascript");
-    script.src = 'https://omo.aiyouyi.cn/common-static/monitor-white-list.js?v=' + new Date().getTime();
-    document.body.appendChild(script);
-    script.onload = function() {
-      if(window.monitorWhiteList && Array.isArray(window.monitorWhiteList)) {
-        _self.options.whiteList = window.monitorWhiteList
+    const whiteListUrl = 'https://omo.aiyouyi.cn/common-static/monitor-white-list.json?v=' + new Date().getTime()
+    if(!this.options.mini) {
+
+      //浏览器ajax获取白名单
+      this.request({
+        url: whiteListUrl,
+        method: 'GET',
+        data: null,
+        callback: (data) => {
+          if(data && Array.isArray(data)) {
+            _self.setWhiteList(data)
+            callback && callback(data)
+          }else {
+            callback && callback(null)
+          }
+        }
+      })
+    }else {
+
+      //小程序获取白名单
+      this.options.wx && this.options.wx.request({
+        url: whiteListUrl,
+        method: 'get',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        success(data) {
+        debugger
+          _self.setWhiteList(data.data)
+          callback && callback(data.data)
+        },
+        fail(error) {
+          callback && callback(null)
+        }
+      })
+    }
+  }
+
+
+  /**
+   * 对外开放的设置白名单
+   *
+   * @param {*} list
+   * @memberof WebMonitor
+   */
+  setWhiteList(list) {
+    let _list = []
+    if(this.utils.isObject(list)) {
+      for(let key in list) {
+        _list.push(list[key])
       }
+    }else {
+      _list = list
+    }
+
+    if(_list && Array.isArray(_list)) {
+      this.options.whiteList = _list
     }
   }
 
@@ -147,9 +202,12 @@ class WebMonitor {
    */
   __report(type, msg, requestInfo) {
     for (let i = 0; i<this.options.whiteList.length; i++) {
-      const one = this.options.whiteList[i]
-      if(this.utils.isRegExp(one)) {  //如果白名单项是正则对象则匹配屏蔽
-        if (one.test(msg)) {
+      let one = this.options.whiteList[i]
+      if(one.includes('$$')) {  //如果白名单项是正则对象则匹配屏蔽
+        one = one.match(/[^【]+(?=】)/g);
+        let _Reg = new RegExp(one[0], one[1] || '');
+        if (_Reg.test(msg)) {
+          console.log(66666666666)
           return
         }
       }else if(this.utils.isString(one)){ //如果白名单是字符串则包含屏蔽
@@ -192,13 +250,67 @@ class WebMonitor {
     if (this.options.ajax && this.utils.isFunction(this.options.ajax)) {
       this.options.ajax(data)
       return
-    }
-    if(this.axios) {
-      this.axios.post(this.options.reportUrl, data)
     }else {
-      console.warn('axios不存在')
+      if(!this.options.mini) {
+
+        //浏览器ajax上报错误
+        this.request({
+          url: this.options.reportUrl,
+          method: 'POST',
+          data: data
+        })
+      }else {
+
+        //小程序上报错误
+        this.options.wx && this.options.wx.request({
+          url: this.options.reportUrl,
+          method: 'post',
+          data: Object.assign({}, data, {pageUrl: this.options.pageUrl})
+        })
+      }
+
     }
+
   }
+
+
+  /**
+   * 
+   *
+   * @param {*} url
+   * @param {*} method
+   * @param {*} data
+   * @param {*} callback
+   * @memberof WebMonitor
+   */
+  request({url, method, data,  callback}){
+    var versionList = ["MSXML2.XMLHttp.5.0","MSXML2.XMLHttp.4.0","MSXML2.XMLHttp.3.0","MSXML2.XMLHttp","Microsoft.XMLHttp"];
+    var xhr;
+    if(XMLHttpRequest){
+      xhr = new XMLHttpRequest();
+    }else{
+      for(var i =0;i<versionList.length;i++){
+        try{
+          xhr = new ActiveXObject(versionList[i]);
+          break;
+        }catch(e){
+          console.warn(e)
+        }
+      }
+    }
+        
+    xhr.onreadystatechange = (function(myxhr){
+      return function(){
+        if(myxhr.readyState === 4 && myxhr.status === 200){
+          callback(myxhr.responseText);
+        }else {
+          callback(null)
+        }
+      }
+    })(xhr);
+    xhr.open(method,url,true);
+    xhr.send(data);
+}
 
 
   /**

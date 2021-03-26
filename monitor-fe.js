@@ -1,5 +1,5 @@
 /*!
- * monitor-fe.js v1.3.0
+ * monitor-fe.js v1.3.1
  * (c) 2021 fangyuan <735512174@qq.com>
  * Released under the MIT License.
  */
@@ -63,11 +63,11 @@ var WebMonitor = function () {
       userId: '',
       shopId: '',
       vue: false,
-      axios: false
+      mini: false, //默认是在小程序环境里，为了兼容小程序老代码
+      wx: null //微信对象
     };
     this.options = {};
     this.setOption(params);
-    this.__setWhiteList();
     if (!this.options.systemName) {
       console.warn('前端监控器缺少systemName参数，无法运行，请检查！');
       return;
@@ -76,6 +76,7 @@ var WebMonitor = function () {
       console.warn('前端监控器缺少reportUrl参数，无法运行，请检查！');
       return;
     }
+
     this.cacheQuene = []; //缓冲队列
     this.__init();
   }
@@ -99,9 +100,6 @@ var WebMonitor = function () {
       if (this.options.vue) {
         this.Vue = require('vue');
       }
-      if (this.options.axios) {
-        this.axios = require('axios');
-      }
     }
 
     /**
@@ -113,11 +111,20 @@ var WebMonitor = function () {
   }, {
     key: '__init',
     value: function __init() {
-      this.__getBrowserInfo(); //浏览器信息
-      this.__initQuene();
-      this.__vueError();
-      this.__consoleError();
-      this.__promiseError();
+      var _this = this;
+
+      this.__getWhiteList(function (data) {
+        if (!data) {
+          console.warn('获取白名单失败！');
+          return;
+        } else {
+          _this.__getBrowserInfo(); //浏览器信息
+          _this.__initQuene();
+          _this.__vueError();
+          _this.__consoleError();
+          _this.__promiseError();
+        }
+      });
     }
 
     /**
@@ -127,18 +134,69 @@ var WebMonitor = function () {
     */
 
   }, {
-    key: '__setWhiteList',
-    value: function __setWhiteList() {
+    key: '__getWhiteList',
+    value: function __getWhiteList(_callback) {
       var _self = this;
-      var script = document.createElement('script');
-      script.setAttribute("type", "text/javascript");
-      script.src = 'https://omo.aiyouyi.cn/common-static/monitor-white-list.js?v=' + new Date().getTime();
-      document.body.appendChild(script);
-      script.onload = function () {
-        if (window.monitorWhiteList && Array.isArray(window.monitorWhiteList)) {
-          _self.options.whiteList = window.monitorWhiteList;
+      var whiteListUrl = 'https://omo.aiyouyi.cn/common-static/monitor-white-list.json?v=' + new Date().getTime();
+      if (!this.options.mini) {
+
+        //浏览器ajax获取白名单
+        this.request({
+          url: whiteListUrl,
+          method: 'GET',
+          data: null,
+          callback: function callback(data) {
+            if (data && Array.isArray(data)) {
+              _self.setWhiteList(data);
+              _callback && _callback(data);
+            } else {
+              _callback && _callback(null);
+            }
+          }
+        });
+      } else {
+
+        //小程序获取白名单
+        this.options.wx && this.options.wx.request({
+          url: whiteListUrl,
+          method: 'get',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          success: function success(data) {
+            debugger;
+            _self.setWhiteList(data.data);
+            _callback && _callback(data.data);
+          },
+          fail: function fail(error) {
+            _callback && _callback(null);
+          }
+        });
+      }
+    }
+
+    /**
+     * 对外开放的设置白名单
+     *
+     * @param {*} list
+     * @memberof WebMonitor
+     */
+
+  }, {
+    key: 'setWhiteList',
+    value: function setWhiteList(list) {
+      var _list = [];
+      if (this.utils.isObject(list)) {
+        for (var key in list) {
+          _list.push(list[key]);
         }
-      };
+      } else {
+        _list = list;
+      }
+
+      if (_list && Array.isArray(_list)) {
+        this.options.whiteList = _list;
+      }
     }
 
     /**
@@ -196,9 +254,12 @@ var WebMonitor = function () {
     value: function __report(type, msg, requestInfo) {
       for (var i = 0; i < this.options.whiteList.length; i++) {
         var one = this.options.whiteList[i];
-        if (this.utils.isRegExp(one)) {
+        if (one.includes('$$')) {
           //如果白名单项是正则对象则匹配屏蔽
-          if (one.test(msg)) {
+          one = one.match(/[^【]+(?=】)/g);
+          var _Reg = new RegExp(one[0], one[1] || '');
+          if (_Reg.test(msg)) {
+            console.log(66666666666);
             return;
           }
         } else if (this.utils.isString(one)) {
@@ -244,12 +305,71 @@ var WebMonitor = function () {
       if (this.options.ajax && this.utils.isFunction(this.options.ajax)) {
         this.options.ajax(data);
         return;
-      }
-      if (this.axios) {
-        this.axios.post(this.options.reportUrl, data);
       } else {
-        console.warn('axios不存在');
+        if (!this.options.mini) {
+
+          //浏览器ajax上报错误
+          this.request({
+            url: this.options.reportUrl,
+            method: 'POST',
+            data: data
+          });
+        } else {
+
+          //小程序上报错误
+          this.options.wx && this.options.wx.request({
+            url: this.options.reportUrl,
+            method: 'post',
+            data: Object.assign({}, data, { pageUrl: this.options.pageUrl })
+          });
+        }
       }
+    }
+
+    /**
+     * 
+     *
+     * @param {*} url
+     * @param {*} method
+     * @param {*} data
+     * @param {*} callback
+     * @memberof WebMonitor
+     */
+
+  }, {
+    key: 'request',
+    value: function request(_ref) {
+      var url = _ref.url,
+          method = _ref.method,
+          data = _ref.data,
+          callback = _ref.callback;
+
+      var versionList = ["MSXML2.XMLHttp.5.0", "MSXML2.XMLHttp.4.0", "MSXML2.XMLHttp.3.0", "MSXML2.XMLHttp", "Microsoft.XMLHttp"];
+      var xhr;
+      if (XMLHttpRequest) {
+        xhr = new XMLHttpRequest();
+      } else {
+        for (var i = 0; i < versionList.length; i++) {
+          try {
+            xhr = new ActiveXObject(versionList[i]);
+            break;
+          } catch (e) {
+            console.warn(e);
+          }
+        }
+      }
+
+      xhr.onreadystatechange = function (myxhr) {
+        return function () {
+          if (myxhr.readyState === 4 && myxhr.status === 200) {
+            callback(myxhr.responseText);
+          } else {
+            callback(null);
+          }
+        };
+      }(xhr);
+      xhr.open(method, url, true);
+      xhr.send(data);
     }
 
     /**
@@ -261,9 +381,9 @@ var WebMonitor = function () {
 
   }, {
     key: 'emit',
-    value: function emit(_ref) {
-      var type = _ref.type,
-          error = _ref.error;
+    value: function emit(_ref2) {
+      var type = _ref2.type,
+          error = _ref2.error;
 
       if (!type) {
         console.warn('未定义错误类型');
@@ -294,9 +414,9 @@ var WebMonitor = function () {
 
   }, {
     key: '__createMessage',
-    value: function __createMessage(_ref2) {
-      var componentInfo = _ref2.componentInfo,
-          error = _ref2.error;
+    value: function __createMessage(_ref3) {
+      var componentInfo = _ref3.componentInfo,
+          error = _ref3.error;
 
 
       //消息内容
